@@ -14,9 +14,23 @@ const app = express();
 
 await connectDB();
 
-// ✅ Configure CORS to allow only your frontend
+// ✅ Allow multiple origins (Vercel, Netlify, Localhost)
+const allowedOrigins = [
+  "https://sociuss.vercel.app",
+  "https://sociuss.netlify.app",
+  "http://localhost:5173" // local dev
+];
+
+// ✅ CORS middleware
 app.use(cors({
-  origin: process.env.CLIENT_URL || "https://sociuss.vercel.app",
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    return callback(new Error("Not allowed by CORS"));
+  },
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
   credentials: true
@@ -25,6 +39,7 @@ app.use(cors({
 app.use(express.json());
 app.use(clerkMiddleware());
 
+// ✅ Routes
 app.get('/', (req, res) => res.send('Server is running'));
 
 app.use('/api/inngest', serve({ client: inngest, functions }));
