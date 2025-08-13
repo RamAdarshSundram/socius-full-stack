@@ -12,27 +12,30 @@ import messageRouter from './routes/messageRoutes.js';
 
 const app = express();
 
+// Connect to MongoDB
 await connectDB();
 
-// ✅ Allow multiple origins (Vercel, Netlify, Localhost)
+// ✅ Automatically allow localhost, Netlify, and Vercel in dev
 const allowedOrigins = [
-  "https://sociuss.vercel.app",
-  "https://sociuss.netlify.app",
-  "http://localhost:5173" // local dev
+  'http://localhost:5173',
+  'http://localhost:3000',
+  'https://sociuss.netlify.app',
+  'https://sociuss.vercel.app',
+  'https://socius-one.vercel.app'
 ];
 
 // ✅ CORS middleware
 app.use(cors({
   origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl)
-    if (!origin) return callback(null, true);
+    if (!origin) return callback(null, true); // Allow requests with no origin (mobile apps, curl)
     if (allowedOrigins.includes(origin)) {
       return callback(null, true);
     }
-    return callback(new Error("Not allowed by CORS"));
+    console.warn(`❌ CORS blocked request from: ${origin}`);
+    return callback(new Error('Not allowed by CORS'));
   },
-  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
   credentials: true
 }));
 
@@ -48,5 +51,11 @@ app.use('/api/post', postRouter);
 app.use('/api/story', storyRouter);
 app.use('/api/message', messageRouter);
 
+// ✅ Handle errors gracefully
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ message: err.message || 'Internal Server Error' });
+});
+
 const PORT = process.env.PORT || 4000;
-app.listen(PORT, () => console.log(`Server is running on port ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Server is running on port ${PORT}`));
