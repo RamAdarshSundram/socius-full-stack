@@ -15,28 +15,19 @@ const app = express();
 // Connect to MongoDB
 await connectDB();
 
-// ✅ Automatically allow localhost, Netlify, and Vercel in dev
-const allowedOrigins = [
-  'http://localhost:5173',
-  'http://localhost:3000',
-  'https://sociuss.netlify.app',
-  'https://sociuss.vercel.app',
-  'https://socius-one.vercel.app'
-];
-
-// ✅ CORS middleware
+// ✅ Allow ALL origins (for testing / public APIs)
 app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin) return callback(null, true); // Allow requests with no origin (mobile apps, curl)
-    if (allowedOrigins.includes(origin)) {
-      return callback(null, true);
-    }
-    console.warn(`❌ CORS blocked request from: ${origin}`);
-    return callback(new Error('Not allowed by CORS'));
-  },
+  origin: '*',
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-  credentials: true
+  credentials: false // set to true only if you are using cookies/auth headers
+}));
+
+// ✅ Ensure preflight requests are handled
+app.options('*', cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 }));
 
 app.use(express.json());
